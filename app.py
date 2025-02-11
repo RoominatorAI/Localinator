@@ -1,10 +1,6 @@
 import json
 import os
-import time
-print("Loading packaged content...")
-startTime = time.time()
 import packaged
-print(f"Finished in {time.time() - startTime}s.")
 import subprocess
 #import pyttsx3
 #from openai import OpenAI
@@ -41,7 +37,7 @@ app.secret_key = bcrypt.gensalt()
 if not os.path.isdir("./metadata"):
     os.makedirs("./metadata")
 model = None
-if compiled_settings.include_ai_model:
+if compiled_settings["include_ai_model"]:
     with packaged.open("/packaged/metadata/Llama-3.2-1B-Instruct-Q4_0.gguf") as tmpfile_location:
         if not os.path.isfile("./metadata/Llama-3.2-1B-Instruct-Q4_0.gguf"):
             Path(tmpfile_location).rename("./metadata/Llama-3.2-1B-Instruct-Q4_0.gguf")

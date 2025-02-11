@@ -39,5 +39,5 @@ jobs:
           python_ver: '3.12'
           requirements: 'requirements.txt'
           upload_exe_with_name: ${{ matrix.exe_name }}
-          spec: 'app.py'
+          spec: 'packaged.py'
           options: --onefile, --name "Localinator",
