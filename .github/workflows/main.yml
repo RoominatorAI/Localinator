@@ -11,7 +11,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        include:
+          - os: ubuntu-latest
+            exe_name: Localinator-ubuntu
+          - os: windows-latest
+            exe_name: Localinator-windows
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -34,6 +38,6 @@ jobs:
         with:
           python_ver: '3.12'
           requirements: 'requirements.txt'
-          upload_exe_with_name: 'Localinator'
+          upload_exe_with_name: ${{ matrix.exe_name }}
           spec: 'app.py'
           options: --onefile, --name "Localinator",
