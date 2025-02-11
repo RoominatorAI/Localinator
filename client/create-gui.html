@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/client/RoominatorSDK.js"></script>
+<script src="https://api.roominator.xyz/static/js_shared.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Creation GUI</title><style>        .auth-links a {
+            margin-right: 15px; /* Add spacing between links */
+            text-decoration: none; /* Remove underline from links */
+            color: #3498db; /* Link color */
+        }
+        .charManagement-links a {
+            margin-right: 15px; /* Add spacing between links */
+            text-decoration: none; /* Remove underline from links */
+            color: #3498db; /* Link color */
+        }
+        .user-status {
+            margin-left: 15px; /* Optional spacing */
+        }</style>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            justify-content: center;
+            margin: 0;
+            overflow: hidden;
+        }
+        input, textarea {
+            width: 98%;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        /* Style the button that is used to open and close the collapsible content */
+        .collapsible {
+            background-color: #eee;
+            color: #444;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+        }
+
+        /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+        .active, .collapsible:hover {
+            background-color: #ccc;
+        }
+
+        /* Style the collapsible content. Note: hidden by default */
+        .content {
+            padding: 0 18px;
+            display: none;
+            overflow: scroll;
+            background-color: #f1f1f1;
+            height: 50vh;
+            width:98vw;
+            transition: max-height 0.2s ease-out;
+        }
+        .content {
+            padding: 0 18px;
+            display: none;
+            overflow: scroll;
+            background-color: #f1f1f1;
+            height: 50vh;
+            width:98vw;
+            transition: max-height 0.2s ease-out;
+        }
+    </style>
+    <script>
+        let currentOffset = 0; // Offset for loading more characters
+        let myUsername = "Guest";
+        async function fetchUserInfo() {
+            try {
+                const response = await fetch(buildAPIURL('whoami'),  {credentials: 'include'});
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                const username = data.username || "Guest"; // Fallback to "Guest" if username is not available
+                document.getElementById('user-status').textContent = `${username}`;
+                myUsername = username;
+            } catch (error) {
+                console.error('Error fetching user info:', error);
+                document.getElementById('user-status').textContent = 'Failed to fetch user information';
+            }
+        }
+
+        async function loadCharacters() {
+            try {
+                const response = await fetch(buildAPIURL(`roulette/5`),  {credentials: 'include'});
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const ids = await response.json(); // Expecting an array of IDs
+
+                for (const id of ids) {
+                    await fetchCharacter(id);
+                }
+
+                currentOffset += ids.length; // Update offset for next load
+            } catch (error) {
+                console.error('Error loading characters:', error);
+            }
+        }
+function sanitize(string) {
+  const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#x27;',
+      "/": '&#x2F;',
+  };
+  const reg = /[&<>"'/]/ig;
+  return string.replace(reg, (match)=>(map[match]));
+}
+
+        async function fetchCharacter(id) {
+            try {
+                const response = await fetch(buildAPIURL(`getchardef/${id}`=,  {credentials: 'include'});
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                const charData = JSON.parse(data.json_content); // Parse the nested JSON
+                const charName = charData.char_name;
+
+                const charElement = document.createElement('div');
+                charElement.className = 'char';
+                charElement.innerHTML = `<a href="/client/latest-chat.html?c=${id}"><img alt="${sanitize(charName)}" src="https://api.roominator.xyz/static/bot-pfp-${id}.webp" style="height:100%;width:100%;"></a>`;
+                document.querySelector('.container-chars').appendChild(charElement);
+            } catch (error) {
+                console.error('Error fetching character:', error);
+            }
+        }
+
+        function loadMoreCharacters() {
+            loadCharacters();
+        }
+
+        window.onload = async function() {
+            await fetchUserInfo();
+            if (myUsername != "Guest") {
+                document.getElementById("auth-links").style.display = 'none';
+                document.getElementById("charManagement-links").style.display = '';
+            }
+            await loadCharacters(); // Load initial characters
+
+        };
+
+
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Check if the 'error' parameter exists
+        if (urlParams.has('error')) {
+            alert(urlParams.get('error'));
+            // You can perform further actions here
+        } else {
+            console.log('Error parameter does not exist');
+        }
+        if (urlParams.has('success')) {
+            alert(urlParams.get('success'));
+            // You can perform further actions here
+        } else {
+            console.log('Error parameter does not exist');
+        }
+
+    </script>
+</head>
+<body>
+<div class="sidebar">
+    <div class="auth-links" id="auth-links">
+        <a href="users/login.html">Login</a>
+        <a href="users/register.html">Register</a>
+    </div>
+    <div class="charManagement-links" id="charManagement-links" style="display:none;">
+        <a href="index.html">Roominator</a>
+        <a href="create-gui.html">Create Character</a>
+    </div>
+    <div class="user-status">
+        <a id="user-status" href="users/myProfile.html">Loading user information...</a>
+    </div>
+</div>
+<button type="button" class="collapsible">Manual</button>
+<div class="content"><h3>Create a Character</h3>
+    <label for="char_name">Character Name:</label>
+    <input type="text" id="char_name" required><br>
+
+    <label for="char_persona">Long description of character:</label>
+    <textarea id="char_persona" rows="4" required></textarea><br>
+
+    <label for="char_greeting">Character Greeting:</label>
+    <textarea id="char_greeting" rows="2" required></textarea><br>
+
+    <label for="world_scenario">World Scenario:</label>
+    <textarea id="world_scenario" rows="4" required></textarea><br>
+
+    <label for="example_dialogue">Example Dialogue:</label>
+    <textarea id="example_dialogue" rows="4" required></textarea><br>
+
+    <label for="personality">Short description of character, usually one sentence:</label>
+    <input type="text" id="personality" required><br>
+
+    <label for="multichar">Multiple Characters:</label>
+    <select id="multichar">
+        <option value="false">No</option>
+        <option value="true">Yes</option>
+    </select><br>
+
+    <button id="createCharBtn-gui">Create Character</button></div>
+<button type="button" class="collapsible">Automatic</button>
+<div class="content"><h3>Create a Character (Auto)</h3>
+    <label for="fwn">Fandom Wiki Name:</label>
+    <input type="text" id="fwn" required><br>
+    <label for="pgn">Page Name:</label>
+    <input type="text" id="pgn" required><br>
+    <button id="createCharBtn">Create Character</button>
+</div>
+
+<script>
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function() {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        });
+    }
+    document.getElementById('createCharBtn-gui').addEventListener('click', function () {
+        const char_name = document.getElementById('char_name').value;
+        const char_persona = document.getElementById('char_persona').value;
+        const char_greeting = document.getElementById('char_greeting').value;
+        const world_scenario = document.getElementById('world_scenario').value;
+        const example_dialogue = document.getElementById('example_dialogue').value;
+        const personality = document.getElementById('personality').value;
+        const multichar = document.getElementById('multichar').value === 'true';
+
+        const timestamp = new Date().toISOString();
+
+        const characterData = {
+            char_name: char_name,
+            char_persona: char_persona,
+            char_greeting: char_greeting,
+            world_scenario: world_scenario,
+            example_dialogue: example_dialogue,
+            name: char_name,
+            description: char_persona,
+            first_mes: char_greeting,
+            scenario: world_scenario,
+            mes_example: example_dialogue,
+            personality: personality,
+            multichar: multichar,
+            metadata: {
+                version: 1,
+                created: timestamp,
+                modified: timestamp,
+                source: null,
+                tool: {
+                    name: "Roominator GUI",
+                    version: "0.2.0"
+                }
+            }
+        };
+
+        fetch(buildAPIURL('createchar'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(characterData),credentials:"include"
+        })
+            .then(response => {
+            if (response.ok) {
+                // Clear the form after successful submission
+                document.getElementById('char_name').value = '';
+                document.getElementById('char_persona').value = '';
+                document.getElementById('char_greeting').value = '';
+                document.getElementById('world_scenario').value = '';
+                document.getElementById('example_dialogue').value = '';
+                document.getElementById('personality').value = '';
+                document.getElementById('multichar').value = 'false';
+                return response.json();
+            } else {
+                alert('Failed to create character.');
+            }
+        }).then(response => {
+            window.location.href = "/client/latest-chat.html?c=".concat(response["id"].toString())
+        })
+            .catch(error => {
+            console.error('Error:', error);
+            alert('Error creating character.');
+        });
+    });
+    document.getElementById('createCharBtn').addEventListener('click', function () {
+        const fwn = document.getElementById('fwn').value;
+        const pgn = document.getElementById('pgn').value;
+        document.body.style.display = "none";
+        fetch(`/getFandomPage?wiki=${fwn}&title=${pgn}`)
+            .then(data => {
+            return data.text();
+        })
+            .then(post => {
+            fetch(buildAPIURL('createchar'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: post,credentials:"include"
+            })
+                .then(response => {
+                if (!response.ok) {
+                    alert("Network response was not ok")
+                    return;
+                }
+                return response.json();
+            }).then(response => {
+                window.location.href = "/client/latest-chat.html?c=".concat(response["id"].toString())
+            })
+                .catch(error => {
+                console.error('Error:', error);
+                alert('Error creating character.');
+            });
+        }).catch(error => {
+            console.error('Error:', error);
+            alert('Error creating character.');
+        });
+    });
+</script>
+<a href="create-gui-json.html">temp: json</a>
+</body>
+</html>

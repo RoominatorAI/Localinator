@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/client/RoominatorSDK.js"></script>
+<script src="https://api.roominator.xyz/static/js_shared.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload JSON</title>
+<style>        .auth-links a {
+            margin-right: 15px; /* Add spacing between links */
+            text-decoration: none; /* Remove underline from links */
+            color: #3498db; /* Link color */
+        }
+        .charManagement-links a {
+            margin-right: 15px; /* Add spacing between links */
+            text-decoration: none; /* Remove underline from links */
+            color: #3498db; /* Link color */
+        }
+        .user-status {
+            margin-left: 15px; /* Optional spacing */
+        }</style>
+    <script>
+        let currentOffset = 0; // Offset for loading more characters
+        let myUsername = "Guest";
+        async function fetchUserInfo() {
+            try {
+                const response = await fetch(buildAPIURL('whoami'),  {credentials: 'include'});
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                const username = data.username || "Guest"; // Fallback to "Guest" if username is not available
+                document.getElementById('user-status').textContent = `${username}`;
+                myUsername = username;
+            } catch (error) {
+                console.error('Error fetching user info:', error);
+                document.getElementById('user-status').textContent = 'Failed to fetch user information';
+            }
+        }
+
+        async function loadCharacters() {
+            try {
+                const response = await fetch(buildAPIURL(`roulette/5`),  {credentials: 'include'});
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const ids = await response.json(); // Expecting an array of IDs
+
+                for (const id of ids) {
+                    await fetchCharacter(id);
+                }
+
+                currentOffset += ids.length; // Update offset for next load
+            } catch (error) {
+                console.error('Error loading characters:', error);
+            }
+        }
+function sanitize(string) {
+  const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#x27;',
+      "/": '&#x2F;',
+  };
+  const reg = /[&<>"'/]/ig;
+  return string.replace(reg, (match)=>(map[match]));
+}
+
+        async function fetchCharacter(id) {
+            try {
+                const response = await fetch(buildAPIURL(`getchardef/${id}`),  {credentials: 'include'});
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                const charData = JSON.parse(data.json_content); // Parse the nested JSON
+                const charName = charData.char_name;
+
+                const charElement = document.createElement('div');
+                charElement.className = 'char';
+                charElement.innerHTML = `<a href="/client/latest-chat.html?c=${id}"><img alt="${sanitize(charName)}" src="https://api.roominator.xyz/static/bot-pfp-${id}.webp" style="height:100%;width:100%;"></a>`;
+                document.querySelector('.container-chars').appendChild(charElement);
+            } catch (error) {
+                console.error('Error fetching character:', error);
+            }
+        }
+
+        function loadMoreCharacters() {
+            loadCharacters();
+        }
+
+        window.onload = async function() {
+            await fetchUserInfo();
+            if (myUsername != "Guest") {
+                document.getElementById("auth-links").style.display = 'none';
+                document.getElementById("charManagement-links").style.display = '';
+            }
+            await loadCharacters(); // Load initial characters
+
+        };
+
+
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Check if the 'error' parameter exists
+        if (urlParams.has('error')) {
+            alert(urlParams.get('error'));
+            // You can perform further actions here
+        } else {
+            console.log('Error parameter does not exist');
+        }
+        if (urlParams.has('success')) {
+            alert(urlParams.get('success'));
+            // You can perform further actions here
+        } else {
+            console.log('Error parameter does not exist');
+        }
+
+    </script>
+</head>
+<body style="background-color:white;">
+<div class="sidebar">
+    <div class="auth-links" id="auth-links">
+        <a href="users/login.html">Login</a>
+        <a href="users/register.html">Register</a>
+    </div>
+    <div class="charManagement-links" id="charManagement-links" style="display:none;">
+        <a href="index.html">Roominator</a>
+        <a href="create-gui.html">Create Character</a>
+    </div>
+    <div class="user-status">
+        <a id="user-status" href="users/myProfile.html">Loading user information...</a>
+    </div>
+</div>
+    <h1>Upload CharJSON File</h1>
+    <form id="jsonUploadForm">
+        <input type="file" id="jsonFile" accept=".json" required>
+        <button type="submit">Upload</button>
+    </form>
+    <div id="message"></div>
+
+    <script>
+        document.getElementById('jsonUploadForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const fileInput = document.getElementById('jsonFile');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const jsonContent = JSON.parse(e.target.result);
+                        const response = await fetch(buildAPIURL('createchar'), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(jsonContent),credentials: 'include'
+                        });
+
+                        if (response.ok) {
+                            document.getElementById('message').innerText = 'Upload successful!';
+                        } else {
+                            document.getElementById('message').innerText = 'Upload failed.';
+                        }
+                    } catch (error) {
+                        document.getElementById('message').innerText = 'Invalid JSON file.';
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                document.getElementById('message').innerText = 'Please select a file.';
+            }
+        });
+    </script>
+</body>
+</html>

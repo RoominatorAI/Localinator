@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT-esque Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        #chat-container {
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid #ddd;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #messages {
+            height: 400px;
+            overflow-y: scroll;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        #messages div {
+            margin-bottom: 10px;
+        }
+        #messages .user {
+            text-align: right;
+        }
+        #messages .bot {
+            text-align: left;
+        }
+        #input-container {
+            display: flex;
+        }
+        #input-container input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-top: 1px solid #ddd;
+            outline: none;
+        }
+        #input-container button {
+            padding: 10px 20px;
+            border: none;
+            background: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+        #input-container button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<div id="chat-container">
+    <div id="messages"></div>
+    <div id="input-container">
+        <input type="text" id="user-input" placeholder="Type your message..." />
+        <button id="send-button">Send</button>
+    </div>
+</div>
+<script>
+    const sendButton = document.getElementById('send-button');
+    const userInput = document.getElementById('user-input');
+    const messagesDiv = document.getElementById('messages');
+    var chatSession = null;
+
+    async function getChatDefinition(userInputText) {
+        const response = await fetch(`/getchardef/${encodeURIComponent(userInputText)}`);
+        const data = await response.text();
+        return data;
+    }
+
+    async function generateResponse(userMessage, chatSession) {
+        const response = await fetch('/generateCensor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ togenerate: userMessage, chat: chatSession })
+        });
+        const data = await response.json();
+        return data["result"];
+    }
+
+    function addMessage(content, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = type;
+        messageDiv.textContent = content;
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    (async () => {
+        const chardef = await getChatDefinition(prompt("ID of character? c.ai id"));
+        const obj = JSON.parse(chardef);
+        console.log(chardef);
+        const systemPrompt = `You are an AI roleplay model designed to roleplay as a character. Chardef: ${chardef}`;
+
+        chatSession = [{
+            role: 'system',
+            content: systemPrompt
+        }, {
+            role: 'assistant',
+            content: obj["char_greeting"]
+        }];
+        addMessage(obj["char_greeting"], 'bot');
+        sendButton.addEventListener('click', handleSendMessage);
+        userInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                handleSendMessage();
+            }
+        });
+    })().catch(err => console.error(err));
+
+    async function handleSendMessage() {
+        const userMessage = userInput.value.trim();
+        if (!userMessage) return;
+        addMessage(userMessage, "user");
+        chatSession.push({ role: 'user', content: userMessage });
+        const updatedChatSession = await generateResponse(userMessage, chatSession);
+        console.log(updatedChatSession);
+        const aiMessage = updatedChatSession[updatedChatSession.length - 1]["content"];
+        addMessage(aiMessage, 'bot');
+    }
+</script>
+</body>
+</html>

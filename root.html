@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+<link rel="manifest" href="manifest.json" />
+	<meta property="og:url" content="https://www.roominator.xyz">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Roominator AI: Roleplay with AI bots">
+<meta property="og:description" content="Welcome to Roominator! Find, create and roleplay with all your favorite characters here. Latest news: Mobile app is planned and will come soon!">
+<meta property="og:image" content="https://www.roominator.xyz/favicon.png">
+
+<!-- Twitter Meta Tags -->
+<meta name="twitter:card" content="summary_large_image">
+<meta property="twitter:domain" content="roominator.xyz">
+<meta property="twitter:url" content="https://www.roominator.xyz">
+<meta name="twitter:title" content="Roominator AI: Roleplay with AI bots">
+<meta name="twitter:description" content="Welcome to Roominator! Find, create and roleplay with all your favorite characters here. Latest news: Mobile app is planned and will come soon!">
+<meta name="twitter:image" content="https://www.roominator.xyz/favicon.png">
+    <meta name="theme-color" content="#FF7700">
+    <meta name="viewport" content="width=device-width, initial-scale=1"> 
+    <title>Localinator</title> <style>
+        .loader {
+            border: 16px solid #f3f3f3; /* Light grey */
+            border-top: 16px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+        }
+        .neat {font-family: Arial, Helvetica, sans-serif;}
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        body {
+            background-color:black;
+            overflow:hidden;
+        }
+        .fullscreen {
+            position:absolute;
+            top:0;
+            left:0;
+            bottom:0;
+            right:0;
+            width:100%;
+            height:100%;
+            border:none;
+            margin:0;
+            padding:0;
+            overflow:hidden;
+            z-index:99;
+        }
+.overlay {
+    position:absolute;
+    top:0;
+            margin:0;
+            padding:0;
+    left:0;
+    right:0;
+    bottom:0;
+    width:100%;
+    height:100%
+    overflow:hidden;
+    
+    z-index:9999;
+    color:white;
+}
+        .container {
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            height: 100vh; /* Full viewport height */
+            border: 2px solid #000; /* Just for visualization */
+        }
+.dark {
+    filter: invert(80%);
+}
+.graydark {
+    filter: grayscale(100%) invert(80%);
+}
+.sepia {
+    filter: invert(80%) sepia(80%);
+}
+.truedark {
+    filter: invert(100%);
+}
+.darkred {
+    filter: brightness(9999%);
+}
+.light {
+    /* Nothing */
+}
+    </style>
+    <script>
+        addEventListener("load", (event) => {
+            var frame = document.getElementById("frame");
+            var url_string = window.location.href;
+            var url = new URL(url_string);
+            var c = url.searchParams.get("target");
+            if (c !== null) {
+                frame.src=c;
+            } else {
+                console.log("Parameter 'target' does not exist.");
+            }
+        });
+        function initSite() {
+document.getElementById('overlay').style.display = 'none';
+document.getElementById('frame').classList.add(document.getElementById("themeSelector").value);
+document.getElementById('frame').setAttribute("frame-reversalOfTheme",window.getComputedStyle(document.getElementById('frame')).getPropertyValue("filter"));
+}
+function initIsecai(){
+document.getElementById('overlay').style.display = 'none';
+document.getElementById('frame').src="/isecai/index.html";
+}
+    </script>
+</head>
+<body>
+    <iframe id="frame" src="/client/index.html" class="fullscreen">
+    Your browser doesn't support iframes sorry ;-;
+    </iframe>
+    <div class="overlay" id="overlay" style="z-index:1337;backdrop-filter: invert(80%) blur(10px) brightness(60%);">
+<noscript><h1 class="neat">This site needs javascript brah</h1><p xmlns:cc="http://creativecommons.org/ns#" xmlns:dct="http://purl.org/dc/terms/"><span property="dct:title">Localinator</span> by <span property="cc:attributionName">RoominatorAI</span> is licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY-NC-SA 4.0<img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt=""><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt=""><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/nc.svg?ref=chooser-v1" alt=""><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" alt=""></a></p></noscript>
+<div id="blah" style="display:none;">
+        <h1 class="neat">Localinator Server</h1><br>
+        <h2 class="neat">Select theme:</h2>
+        <select id="themeSelector">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+            <option value="graydark">Grayscale Dark</option>
+            <option value="truedark">OLED Dark</option>
+            <option value="sepia">Sepia</option>
+            <option value="darkred">Flashbang (do not use, only here as a joke)</option>
+        </select>
+        <h2 class="neat">Select Site</h2>
+        <button class="neat" onclick="initSite();">This Site</button>
+        <button class="neat" onclick="initIsecai();">Isecai (currently under construction)</button>
+<div class="cookie-disclaimer">
+    <h3 class="neat">We use essential cookies and a device identifier cookie. By continuing to use this site, you agree to our <a href="/client/legal/tos.html" style="color:red;">Terms of Service</a>.</h3>
+</div>
+        <p xmlns:cc="http://creativecommons.org/ns#" xmlns:dct="http://purl.org/dc/terms/"><span property="dct:title">Localinator</span> by <span property="cc:attributionName">RoominatorAI</span> is licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY-NC-SA 4.0<img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt=""><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt=""><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/nc.svg?ref=chooser-v1" alt=""><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" alt=""></a></p></div>
+        <div id="dead" style="display:none;"><h1>The server is down. please try again later</h1><p xmlns:cc="http://creativecommons.org/ns#" xmlns:dct="http://purl.org/dc/terms/"><span property="dct:title">Localinator</span> by <span property="cc:attributionName">RoominatorAI</span> is licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY-NC-SA 4.0<img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" alt=""><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" alt=""><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/nc.svg?ref=chooser-v1" alt=""><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" alt=""></a></p></div>
+    </div>
+    <div class="container">
+        <div class="loader"></div>
+    </div>
+<script>
+// Function to check if the server is alive
+function checkServerStatus() {
+  // Making the API request
+  fetch("https://api.roominator.xyz/api/v1/status/isalive")
+    .then(response => {
+      if (!response.ok) {
+        // If the response is not OK, show the 'dead' element
+        document.getElementById("dead").style.display = "block";
+        document.getElementById("blah").style.display = "none"; // Hide 'blah' element
+      } else {
+        // If the response is OK, show the 'blah' element
+        document.getElementById("blah").style.display = "block";
+        document.getElementById("dead").style.display = "none"; // Hide 'dead' element
+      }
+    })
+    .catch(error => {
+      // If there's an error (like network failure), show the 'dead' element
+      console.error("Error:", error);
+      document.getElementById("dead").style.display = "block";
+      document.getElementById("blah").style.display = "none"; // Hide 'blah' element
+    });
+}
+
+// Call the function on page load or when you need to check the status
+checkServerStatus();
+</script>
+</body>
+</html>

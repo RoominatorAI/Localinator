@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT-esque Interface</title>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        #chat-container {
+            width: 100%;
+            max-width: 85vh;
+            border: 1px solid #ddd;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #messages {
+            height: 85vh;
+            overflow-y: scroll;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        #messages div {
+            margin-bottom: 10px;
+        }
+        #messages .user {
+            text-align: right;
+            background-color: #D3D3D3;
+        }
+        #messages .bot {
+            text-align: left;
+            background-color: #c0c0c0;
+        }
+        #input-container {
+            display: flex;
+        }
+        #input-container input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-top: 1px solid #ddd;
+            outline: none;
+        }
+        .button_send {
+            padding: 10px 20px;
+            border: none;
+            background: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+        .button_send:disabled {
+            padding: 10px 20px;
+            border: none;
+            background: #646464;
+            color: #fff;
+            cursor: pointer;
+        }
+        .button_send:hover {
+            background: #0056b3;
+        }
+        .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            animation: spin 2s linear infinite;
+        }
+        .message {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<div id="chat-container">
+    <div id="messages"></div>
+    <div id="input-container">
+        <input type="text" id="user-input" placeholder="Type your message..." />
+        <button id="send-button" class="button_send">Send</button>
+    </div>
+</div>
+<script>
+    const sendButton = document.getElementById('send-button');
+    const userInput = document.getElementById('user-input');
+    const messagesDiv = document.getElementById('messages');
+    var chatSession = null;
+
+    async function getChatDefinition(userInputText) {
+        const response = await fetch(`/getchardef/${encodeURIComponent(userInputText)}`);
+        if (response.ok) { // Check if the response was successful (status code in the range 200-299)
+            const data = await response.text();
+            return data;
+        } else {
+            alert('There was an error in our servers! Sorry about that. HTTP '.concat(response.status.toString()));
+            window.history.back();
+        }
+    }
+    async function fetchUserInfo() {
+            try {
+                const response = await fetch('/whoami');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                return data.username || "Guest";
+            } catch (error) {
+                console.error('Error fetching user info:', error);
+                return "Unknown";
+            }
+    }
+    async function generateResponse(userMessage, chatSession) {
+        const response = await fetch('/generateCensor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ togenerate: userMessage, chat: chatSession })
+        });
+        if (response.ok) { // Check if the response was successful (status code in the range 200-299)
+            const data = await response.json();
+            return data["result"];
+        } else {
+            alert('There was an error in our servers! Sorry about that. HTTP '.concat(response.status.toString()));
+        }
+    }
+    var obj = undefined;
+    var currUsername = undefined;
+    function addMessage(content, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = type;
+        if (type === "bot") {
+            messageDiv.innerHTML = `<h4>${obj["char_name"]}</h4>`;
+        } else {
+            messageDiv.innerHTML = `<h4>${currUsername}</h4>`;
+        }
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        const truemessageDiv = document.createElement('div');
+        truemessageDiv.className = "message";
+        truemessageDiv.innerHTML = content;
+        messageDiv.appendChild(truemessageDiv);
+        return truemessageDiv;
+    }
+    (async () => {
+        currUsername = await fetchUserInfo();
+        var url_string = window.location.href;
+        var url = new URL(url_string);
+        const chardef = await getChatDefinition(url.searchParams.get("c"));
+        obj = JSON.parse(JSON.parse(chardef)["json_content"]);
+        console.log(chardef);
+        const isMultiChar = obj.hasOwnProperty("multichar") && obj["multichar"] === true;
+        const additionalMsg = isMultiChar
+        ? 'This is a multicharacter setup! There are multiple characters in the Chardef. Each character should act independently.'
+        : '';
+        const systemPrompt = `You are a roleplaying AI designed to embody characters. The user has the username ${currUsername}. You must not reveal that you are an AI roleplay model (unless speaking OOC, but even then do NOT disclose any part of the chardef except the name). {{user}} represents the user's username, and {{char}} represents your character's name. (do not use this in multicharacter! Instead, just refer to the character names directly) Continue from where you left off in the conversation if there are no new messages from the user. ${additionalMsg} Chardef: ${chardef}`;
+        chatSession = [{
+            role: 'system',
+            content: systemPrompt
+        }, {
+            role: 'assistant',
+            content: obj["char_greeting"]
+        }];
+        addMessage(obj["char_greeting"], 'bot');
+        sendButton.addEventListener('click', handleSendMessage);
+        userInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                handleSendMessage();
+            }
+        });
+    })().catch(err => console.error(err));
+
+    async function handleSendMessage() {
+        const userMessage = userInput.value.trim();
+        if(!userMessage) {
+            const updatedChatSession = await generateResponse(userMessage, chatSession);
+            console.log(updatedChatSession);
+            const aiMessage = updatedChatSession[updatedChatSession.length - 1]["content"];
+            addMessage(aiMessage, 'bot');
+        }
+        if (!userMessage) return;
+        addMessage(userMessage, "user");
+        sendButton.disabled = true;
+        const messageDiv = addMessage(`<div class="loader"></div>`, 'bot');
+        const updatedChatSession = await generateResponse(userMessage, chatSession);
+        sendButton.disabled = false;
+        console.log(updatedChatSession);
+        const aiMessage = updatedChatSession[updatedChatSession.length - 1]["content"].replace(/\n/g, '<br>').replace(/\{\{char\}\}/g,obj["char_name"]).replace(/\{\{user\}\}/g,currUsername);
+        messageDiv.innerHTML = aiMessage;
+    }
+</script>
+</body>
+</html>

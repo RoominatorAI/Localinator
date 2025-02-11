@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Links</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .chat-links {
+            margin-top: 20px;
+        }
+        a {
+            display: block;
+            margin: 5px 0;
+            color: #0066cc;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chats</h1>
+    <div class="chat-links" id="chatLinks"></div>
+
+    <script>
+        async function fetchChats() {
+var url_string = window.location.href; 
+var uarl = new URL(url_string);
+            const chatId = uarl.searchParams.get("c");
+
+            if (!chatId) {
+                alert('Please enter a Chat ID');
+                return;
+            }
+
+            const url = `https://api.roominator.xyz/api/getChats/${chatId}`;
+
+            try {
+                const response = await fetch(url,{credentials:'include'});
+                if (!response.ok) {
+                    throw new Error('Failed to fetch chats');
+                }
+
+                const data = await response.json();
+                const chatLinksContainer = document.getElementById('chatLinks');
+                chatLinksContainer.innerHTML = ''; // Clear previous links
+
+                if (data.chatIds && data.chatIds.length > 0) {
+                    data.chatIds.forEach(cv => {
+                        const link = document.createElement('a');
+                        link.setAttribute('target', '_parent');
+                        link.href = `/client/latest-chat.html?c=${chatId}&cv=${cv}`;
+                        link.textContent = `Chat ${cv}`;
+                        chatLinksContainer.appendChild(link);
+                    });
+                } else {
+                    chatLinksContainer.innerHTML = '<p>No chats found.</p>';
+                }
+            } catch (error) {
+                alert('Error fetching chats: ' + error.message);
+            }
+        }
+fetchChats();
+    </script>
+</body>
+</html>

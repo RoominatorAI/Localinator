@@ -1,0 +1,6 @@
+{
+  "verbose": true,
+  "env": "production",
+  "ignorelogin": false,
+  "device": "gpu"
+}

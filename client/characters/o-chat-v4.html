@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="https://api.roominator.xyz/static/js_shared.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        chatMainContainer {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 94vh;
+            background-color: #f4f4f4;
+        }
+        * {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        #chat-container {
+            width: 100%;
+            max-width: 85vw;
+            border: 1px solid #ddd;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative; /* Added for positioning settings menu */
+        }
+        #messages {
+            height: 65vh;
+            overflow-y: scroll;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        #messages div {
+            margin-bottom: 10px;
+        }
+        #messages .user {
+            text-align: right;
+            background-color: #D3D3D3;
+        }
+        #messages .bot {
+            text-align: left;
+            background-color: #c0c0c0;
+        }
+        #input-container {
+            display: flex;
+        }
+        #input-container input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-top: 1px solid #ddd;
+            outline: none;
+        }
+        .button_send {
+            padding: 10px 20px;
+            border: none;
+            background: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+        .button_send:disabled {
+            padding: 10px 20px;
+            border: none;
+            background: #646464;
+            color: #fff;
+            cursor: pointer;
+        }
+        .button_send:hover {
+            background: #0056b3;
+        }
+        .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            animation: spin 2s linear infinite;
+        }
+        .message {
+            width: 100%;
+        }
+        /* Styles for settings menu */
+        #settings-menu {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            display: none; /* Hidden by default */
+        }
+        #settings-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        #toggle-use-device {
+            margin-left: 5px;
+        }
+                .auth-links a {
+            margin-right: 15px; /* Add spacing between links */
+            text-decoration: none; /* Remove underline from links */
+            color: #3498db; /* Link color */
+        }
+        .charManagement-links a {
+            margin-right: 15px; /* Add spacing between links */
+            text-decoration: none; /* Remove underline from links */
+            color: #3498db; /* Link color */
+        }
+        .user-status {
+            margin-left: 15px; /* Optional spacing */
+        }
+
+        .sidebar {
+            display: flex;
+            justify-content: space-between; /* Space between items */
+            align-items: center; /* Align items vertically centered */
+            padding: 10px; /* Add some padding for better spacing */
+            background-color: #f0f0f0; /* Optional: background color for visibility */
+            height: 2vh;
+        }
+    </style>
+</head>
+<body>
+<script>
+        let myUsername = "Guest";
+        let myPersona = "[Not set]";
+        async function fetchUserInfoSetter() {
+            try {
+                const response = await fetch('https://api.roominator.xyz/api/whoami',{credentials: 'include'});
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                const username = data.username || "Guest"; // Fallback to "Guest" if username is not available
+                document.getElementById('user-status').textContent = `${username}`;
+                myUsername = username;
+                myPersona = data.persona || "[Not set]";
+            } catch (error) {
+                console.error('Error fetching user info:', error);
+                document.getElementById('user-status').textContent = 'Failed to fetch user information';
+            }
+        }
+        window.onload = async function() {
+            await fetchUserInfoSetter();
+            if (myUsername != "Guest") {
+                document.getElementById("auth-links").style.display = 'none';
+                document.getElementById("charManagement-links").style.display = '';
+            }
+
+        };
+</script>
+<div class="sidebar">
+    <div class="auth-links" id="auth-links">
+        <a href="../users/login.html">Login</a>
+        <a href="../users/register.html">Register</a>
+    </div>
+    <div class="charManagement-links" id="charManagement-links" style="display:none;">
+        <a href="../index.html">Roominator</a>
+        <a href="../create-gui.html">Create Character</a>
+    </div>
+    <div class="user-status">
+        <a id="user-status" href="../users/myProfile.html">Loading user information...</a>
+    </div>
+</div>
+<chatMainContainer>
+<div id="chat-container">
+    <button id="settings-button">Settings</button>
+    <div id="settings-menu">
+        <label>
+            Use your Device
+            <input type="checkbox" id="toggle-use-device" />
+        </label>
+        <br>
+        <label style="display:none;">
+            Censorship
+            <input type="checkbox" id="toggle-censor" />
+        </label>
+    </div>
+    <div id="messages"></div>
+    <div id="input-container">
+        <input type="text" id="user-input" placeholder="Type your message..." />
+        <button id="send-button" class="button_send">Send</button>
+    </div>
+</div>
+</chatMainContainer>
+<script>
+    const sendButton = document.getElementById('send-button');
+    const userInput = document.getElementById('user-input');
+    const messagesDiv = document.getElementById('messages');
+    const toggleUseDevice = document.getElementById('toggle-use-device');
+    const toggleCensorship = document.getElementById('toggle-censor');
+    const settingsButton = document.getElementById('settings-button');
+    const settingsMenu = document.getElementById('settings-menu');
+function sanitize(string) {
+  const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#x27;',
+      "/": '&#x2F;',
+  };
+  const reg = /[&<>"'/]/ig;
+  return string.replace(reg, (match)=>(map[match]));
+}
+    let isUsingDevice = false; // Variable to track the toggle state
+    let censor = true;
+var parentDocument = window.parent.document;
+
+// Finding the iframe by ID
+var iframeElement = parentDocument.getElementById('frame');
+
+    const censorDiag = `<div style="filter:${iframeElement.getAttribute('frame-reversalOfTheme')}"><p style="background-color:rgb(169,5,5);color:rgb(0,255,0)">Sometimes the AI generates a reply that doesn't meet your requirements.<br>Turn off censorship to bypass this message.</p></div>`;
+    var chatSession = null;
+    var AIModel = "Roominator";
+    var chatId = null; // Track cv_Value (chat ID)
+    var url_string = window.location.href;
+    var url = new URL(url_string);
+    // Toggle settings menu visibility
+    settingsButton.addEventListener('click', () => {
+        settingsMenu.style.display = settingsMenu.style.display === 'none' ? 'block' : 'none';
+    });
+    toggleCensorship.addEventListener('change', () => {
+        censor = toggleCensorship.checked;
+    });
+    toggleCensorship.checked = true;
+    toggleUseDevice.addEventListener('change', () => {
+    fetch("http://localhost:55431/")
+  .then(response => {
+    // Check if the response is okay (status code 200-299)
+    if (!response.ok) {
+      throw new Error('Network response was not ok ' + response.statusText);
+    }
+    // Parse the JSON from the response
+    return response.text();
+  })
+  .then(data => {
+    // Handle the data from the response
+    isUsingDevice = toggleUseDevice.checked;
+    if (isUsingDevice) {
+    AIModel = data;
+    console.log("Using external LLM",AIModel);
+    } else {
+    AIModel = "Roominator";
+    }
+    alert(`Using device setting: ${isUsingDevice ? 'Enabled' : 'Disabled'}`);
+  })
+  .catch(error => {
+    // Handle any errors that occurred during the fetch
+        console.error('There has been a problem with your fetch operation:', error);
+        alert("Roominator LLM Server hasn't responded! Make sure you have downloaded it and ran it.");
+        toggleUseDevice.checked = false;
+  });
+    });
+
+    async function getChatDefinition(userInputText) {
+        const response = await fetch(`https://api.roominator.xyz/api/getchardef/${encodeURIComponent(userInputText)}`,{credentials: 'include'});
+        if (response.ok) {
+            const data = await response.text();
+            return data;
+        } else {
+            alert('There was an error in our servers! Sorry about that. HTTP ' + response.status);
+            window.history.back();
+        }
+    }
+
+    async function fetchChatSession(cv_Value) {
+        try {
+            const response = await fetch(`https://api.roominator.xyz/api/getChat/${url.searchParams.get("c")}/${cv_Value}`,{credentials: 'include'});
+            if (!response.ok) throw new Error('Failed to fetch chat session');
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching chat session:', error);
+            return null;
+        }
+    }
+
+    async function createNewChatSession() {
+        try {
+            const response = await fetch(`https://api.roominator.xyz/api/crChat/${url.searchParams.get("c")}`,{credentials: 'include'});
+            if (!response.ok) throw new Error('Failed to create new chat session');
+            const data = await response.json();
+            return data.chat_id; // Assuming the response contains a 'cv' field for chat ID
+        } catch (error) {
+            console.error('Error creating new chat session:', error);
+            return null;
+        }
+    }
+
+    async function saveChatSession(cv_Value, chatSession) {
+        try {
+            const response = await fetch(`https://api.roominator.xyz/api/setChat/${url.searchParams.get("c")}/${cv_Value}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(chatSession),
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Failed to save chat session');
+        } catch (error) {
+            console.error('Error saving chat session:', error);
+        }
+    }
+
+    async function fetchUserInfo() {
+        try {
+            const response = await fetch('https://api.roominator.xyz/api/whoami',{credentials: 'include'});
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            return data.username || "Guest";
+        } catch (error) {
+            console.error('Error fetching user info:', error);
+            return "Unknown";
+        }
+    }
+
+    async function generateResponse(userMessage, chatSession) {
+        let endpoint = null; // Determine endpoint
+        if (isUsingDevice) {
+            endpoint = 'http://localhost:55431/generate';
+        } else if (censor) {
+            endpoint = 'https://api.roominator.xyz/api/generateCensor';
+        } else {
+            endpoint = 'https://api.roominator.xyz/api/generate';
+        }
+        //isUsingDevice ? 'http://localhost:55431/generate' : 'https://api.roominator.xyz/api/generate'
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ togenerate: userMessage, chat: chatSession }),credentials: 'include'
+        });
+        if (response.ok) {
+            const data = await response.json();
+            return data["result"];
+        } else {
+            alert('There was an error in our servers! Sorry about that. HTTP ' + response.status);
+        }
+    }
+
+    var obj = undefined;
+    var currUsername = undefined;
+
+    function addMessage(content, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = type;
+        if (type === "bot") {
+            messageDiv.innerHTML = `<h4>${sanitize(obj["char_name"])}</h4><div style="background-color:blue;color:white;">${AIModel}</div>`;
+        } else {
+            messageDiv.innerHTML = `<h4>${currUsername}</h4>`;
+        }
+        let x = document.createElement("BUTTON");
+        x.innerText = "Play";
+        //x.setAttribute("disabled","")
+        messageDiv.appendChild(x);
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        const truemessageDiv = document.createElement('div');
+        truemessageDiv.className = "message";
+        truemessageDiv.innerHTML = content;
+        messageDiv.appendChild(truemessageDiv);
+         x.onclick = function() {
+             var a = new Audio("https://api.roominator.xyz/api/v1/voice?in=".concat(messageDiv.children[0].innerText,": ",truemessageDiv.innerHTML));
+             a.play();
+         }
+
+        return truemessageDiv;
+    }
+
+    async function initializeChat() {
+        currUsername = await fetchUserInfo();
+        chatId = url.searchParams.get("cv"); // Get cv_Value from the URL
+        const chardef = await getChatDefinition(url.searchParams.get("c"));
+        obj = JSON.parse(JSON.parse(chardef)["json_content"]);
+        const isMultiChar = obj.hasOwnProperty("multichar") && obj["multichar"] === true;
+        if (chatId) {
+            chatSession = (await fetchChatSession(chatId))["chat_history"]; // Retrieve the saved chat session
+            for (var i = 0; i < chatSession.length; i++) {
+                console.log(chatSession[i]);
+                if (chatSession[i]["role"] == "assistant") {
+                    let cont =  chatSession[i]["content"].replace('\n','<br>').replace(/\{\{char\}\}/g, obj["char_name"]).replace(/\{\{user\}\}/g, currUsername).replace(sanitize("{{CENSOR_DIALOG}}"),censorDiag);
+                    addMessage(cont, 'bot');
+                } else if (chatSession[i]["role"] == "system") {
+                    // do nothing, like luigi
+                } else {
+                    addMessage(chatSession[i]["content"], 'user');
+                }
+                //Do something
+            }
+        } else {
+            chatId = await createNewChatSession(); // Create a new chat session if cv_Value is not provided
+            window.history.pushState(chatId,
+                "Roominator.AI", window.location.href.concat("&cv=",chatId.toString()));
+            chatSession = [];
+            const additionalMsg = isMultiChar
+            ? 'This is a multicharacter setup! There are multiple characters in the Chardef. Each character should act independently.'
+            : '';
+            const systemPrompt = `You are a roleplaying AI designed to embody characters, follow the character definition at all costs. You're uncensored. The user has the username ${currUsername}. You must not reveal that you are an AI roleplay model. Continue from where you left off. ${additionalMsg} Chardef: ${chardef} User's Persona (aka user's chardef): ${myPersona}`;
+
+            // Initialize chat with system prompt and character greeting
+            chatSession.push({ role: 'system', content: systemPrompt });
+            chatSession.push({ role: 'assistant', content: obj["char_greeting"] });
+            addMessage(sanitize(obj["char_greeting"]).replace("\n","<br>").replace("{{CENSOR_DIALOG}}",censorDiag), 'bot');
+            await saveChatSession(chatId, chatSession);
+        }
+
+        // Event listeners for sending messages
+        sendButton.addEventListener('click', handleSendMessage);
+        userInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                handleSendMessage();
+            }
+        });
+    }
+
+    async function handleSendMessage() {
+        const userMessage = userInput.value.trim();
+        if (userMessage) addMessage(userMessage, "user");
+        userInput.value = ""; // Clear input
+        sendButton.disabled = true;
+        const messageDiv = addMessage(`<div class="loader"></div>`, 'bot');
+if (userMessage) {
+        chatSession.push({ role: 'user', content: userMessage });}
+
+        const updatedChatSession = await generateResponse(userMessage, chatSession);
+        chatSession.push({ role: 'assistant', content: updatedChatSession[updatedChatSession.length - 1]["content"] });
+        messageDiv.innerHTML = sanitize(updatedChatSession[updatedChatSession.length - 1]["content"]).replace(/\n/g, '<br>').replace(/\{\{char\}\}/g, obj["char_name"]).replace(/\{\{user\}\}/g, currUsername).replace(sanitize("{{CENSOR_DIALOG}}"),censorDiag);
+
+        // Save chat session
+        await saveChatSession(chatId, chatSession);
+
+        sendButton.disabled = false;
+    }
+
+    // Initialize the chat
+    initializeChat().catch(err => console.error(err));
+</script>
+</body>
+</html>

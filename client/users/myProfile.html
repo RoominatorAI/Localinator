@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/client/RoominatorSDK.js"></script>
+<script src="https://api.roominator.xyz/static/js_shared.js"></script>
+    <meta charset="UTF-8">
+    <title>Roulette</title>
+    <style>
+        .auth-links a {
+            margin-right: 15px; /* Add spacing between links */
+            text-decoration: none; /* Remove underline from links */
+            color: #3498db; /* Link color */
+        }
+        .charManagement-links a {
+            margin-right: 15px; /* Add spacing between links */
+            text-decoration: none; /* Remove underline from links */
+            color: #3498db; /* Link color */
+        }
+        .user-status {
+            margin-left: 15px; /* Optional spacing */
+        }
+        * {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .sidebar {
+            display: flex;
+            justify-content: space-between; /* Space between items */
+            align-items: center; /* Align items vertically centered */
+            padding: 10px; /* Add some padding for better spacing */
+            background-color: #f0f0f0; /* Optional: background color for visibility */
+            height: 2vh;
+        }
+
+        .container-chars {
+            display: flex; /*Use flexbox */
+            overflow-x: auto; /* Add horizontal scrolling if needed */
+            overflow-y: hidden;
+            height: 100px;
+            width: 98vw;
+        }
+
+        .char {
+            width: 150px; /* Set a width for the items */
+            height: 100px;
+            margin: 10px; /* Optional: Add some spacing */
+            background-color: lightblue;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            text-align: center; /* Center text */
+        }
+
+        .load-more {
+            margin-top: 10px; /* Optional: Add some spacing */
+            cursor: pointer; /* Show pointer on hover */
+            color: #3498db; /* Link color */
+            text-decoration: underline; /* Underline text */
+        }
+    </style>
+    <script>
+        let currentOffset = 0; // Offset for loading more characters
+        let myUsername = "Guest";
+        async function fetchUserInfo() {
+            try {
+                const response = await fetch(buildAPIURL('whoami'),  {credentials: 'include'});
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                const username = data.username || "Guest"; // Fallback to "Guest" if username is not available
+                document.getElementById('user-status').textContent = `${username}`;
+                myUsername = username;
+            } catch (error) {
+                console.error('Error fetching user info:', error);
+                document.getElementById('user-status').textContent = 'Failed to fetch user information';
+            }
+        }
+        window.onload = async function() {
+            await fetchUserInfo();
+            if (myUsername != "Guest") {
+                document.getElementById("auth-links").style.display = 'none';
+                document.getElementById("charManagement-links").style.display = '';
+            } else {
+window.location.replace("..");
+}
+            //await loadCharacters(); // Load initial characters
+
+        };
+
+
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Check if the 'error' parameter exists
+        if (urlParams.has('error')) {
+            alert(urlParams.get('error'));
+            // You can perform further actions here
+        } else {
+            console.log('Error parameter does not exist');
+        }
+
+    </script>
+</head>
+<body style="background-color:white">
+<div class="sidebar">
+    <div class="auth-links" id="auth-links">
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+    </div>
+    <div class="charManagement-links" id="charManagement-links" style="display:none;">
+        <a href="../index.html">Roominator</a>
+        <a href="../create-gui.html">Create Character</a>
+    </div>
+    <div class="user-status">
+        <a id="user-status" href="users/myProfile.html">Loading user information...</a>
+    </div>
+</div>
+<h1>Nothins here dude</h1>
+<!--<div class="container-chars"></div>
+<br>
+<a class="load-more" onclick="loadMoreCharacters()">Load More</a>
+<a href="formtest.html">formtest</a>
+<a href="chat-v1.html">chattest</a>
+<a href="chat-json.html">chatjsontest</a>-->
+</body>
+</html>

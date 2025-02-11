@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    <script>
+        // Get current URL parameters
+        const params = new URLSearchParams(window.location.search);
+        // Redirect to chat-v4.html with the same parameters
+        window.location.href = './characters/chat-v4.html' + (params.toString() ? '?' + params.toString() : '');
+    </script>
+</head>
+<body>
+    <p>Redirecting to chat-v4.html...</p>
+</body>
+</html>
