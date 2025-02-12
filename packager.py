@@ -2,7 +2,7 @@
 import os
 import base64
 import sys
-from compiled_settings import compiled_settings
+import compiled_settings
 
 # Define the paths for the resource file and directory.
 ROOT_HTML = "root.html"
@@ -39,7 +39,7 @@ if os.path.isdir(CLIENT_DIR):
 else:
     print(f"Warning: Directory '{CLIENT_DIR}' not found. No client files will be packaged.", file=sys.stderr)
 
-if compiled_settings["include_ai_model"]:
+if compiled_settings.include_ai_model:
     print("Warning: AI model included. Please disable this, unless you want a fully offline Localinator.")
     for root, dirs, files in os.walk(AIM_DIR):
         for filename in files:
@@ -60,9 +60,6 @@ output_lines = [
     "import base64",
     "import tempfile",
     "import os",
-    "import time",
-    "print('Loading packaged content...')",
-    "startTime = time.time()",
     "from contextlib import contextmanager",
     "",
     "# Dictionary mapping resource paths to their binary content",
@@ -76,7 +73,7 @@ for key in sorted(resources.keys()):
 output_lines.append("}")
 output_lines.append("")
 output_lines.append("@contextmanager")
-output_lines.append("def packager_open(path):")
+output_lines.append("def open(path):")
 output_lines.append("    \"\"\"Return a temporary file containing the requested resource, preserving its extension.\"\"\"")
 output_lines.append("    if path not in _resources:")
 output_lines.append("        raise FileNotFoundError(f\"Resource {path} not found\")")
@@ -94,15 +91,10 @@ output_lines.append("        try:")
 output_lines.append("            os.unlink(tmp.name)")
 output_lines.append("        except Exception:")
 output_lines.append("            pass")
-output_lines.append('print(f"Finished in {time.time() - startTime}s.")')
+output_lines.append("")
 
 # Write the output to packaged.py.
 with open("packaged.py", "w", encoding="utf-8") as out_file:
     out_file.write("\n".join(output_lines))
-    with open("init.py", "r", encoding="utf-8") as in_file:
-        out_file.write("\n"+in_file.read())
-    with open("compiled_settings.py", "r", encoding="utf-8") as in_file:
-        out_file.write("\n"+in_file.read())
-    with open("app.py", "r", encoding="utf-8") as in_file:
-        out_file.write("\n"+in_file.read())
+
 print("packaged.py has been created successfully.")
