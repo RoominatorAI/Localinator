@@ -3,7 +3,7 @@ import os
 import time
 print("Loading packaged content...")
 startTime = time.time()
-import packaged
+from . import packaged
 print(f"Finished in {time.time() - startTime}s.")
 import subprocess
 #import pyttsx3
@@ -24,8 +24,8 @@ import threading
 from waitress import serve
 import datetime
 from gpt4all import GPT4All
-import init
-import compiled_settings
+from . import init
+from . import compiled_settings
 from pathlib import Path
 environment = config["env"]
 
