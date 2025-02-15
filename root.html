@@ -59,7 +59,7 @@
     right:0;
     bottom:0;
     width:100%;
-    height:100%
+    height:100%;
     overflow:hidden;
     
     z-index:9999;
@@ -147,7 +147,7 @@ document.getElementById('frame').src="/isecai/index.html";
 // Function to check if the server is alive
 function checkServerStatus() {
   // Making the API request
-  fetch("https://api.Localinator.xyz/api/v1/status/isalive")
+  fetch("http://localhost:8080/api/v1/status/isalive")
     .then(response => {
       if (!response.ok) {
         // If the response is not OK, show the 'dead' element
