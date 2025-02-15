@@ -1,9 +1,32 @@
 import json
 import os
 import time
+import sys
 print("Loading packaged content...")
 startTime = time.time()
-from . import packaged
+packaged = {}
+if not os.path.exists("config.json"):
+    with open("config.json","w") as f:
+        f.write("""{
+  "verbose": true,
+  "env": "production",
+  "ignorelogin": false,
+  "device": "gpu",
+  "model": "Llama-3.2-1B-Instruct-Q4_0.gguf"
+}
+""")
+    print("No config.json found, wrote example one.")
+
+if not os.path.exists("packaged.py"):
+    print("No datablob found! Please download one from GitHub Actions and then put it as packaged.py next to Localinator.")
+    sys.exit(1)
+
+with open("packaged.py","r") as f:
+    try:
+        exec(f.read(),packaged)
+    except Exception as e:
+        print("Datablob threw error! Please download a working one from GitHub Actions and then put it as packaged.py next to Localinator. Error:",repr(e))
+        sys.exit(1)
 print(f"Finished in {time.time() - startTime}s.")
 import subprocess
 #import pyttsx3
@@ -11,10 +34,68 @@ import subprocess
 
 with open("config.json","r") as f:
     config = json.load(f)
+
+
+## INIT.PY
+
+import sqlite3
+# Define the database name
+DATABASE = 'production.db' if config["env"] == "production" else "staging.db"  # Change to 'staging.db' if needed
+
+def create_database():
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    # Create the users table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        passhash TEXT NOT NULL,
+        metadata TEXT DEFAULT '{}',
+        username TEXT UNIQUE NOT NULL,
+        created_at INTEGER NOT NULL
+    );
+    ''')
+
+    # Create the CharJSON_store table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS CharJSON_store (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        json_content TEXT NOT NULL,
+        creatorId INTEGER NOT NULL,
+        visibilityType INTEGER NOT NULL DEFAULT 1,
+        FOREIGN KEY (creatorId) REFERENCES users(id) ON DELETE CASCADE
+    );
+    ''')
+
+    # Create the chat_sessions table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS chat_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        chat_history TEXT NOT NULL,
+        creatorId INTEGER NOT NULL,
+        botId INTEGER NOT NULL,
+        FOREIGN KEY (creatorId) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (botId) REFERENCES CharJSON_store(id) ON DELETE CASCADE
+    );
+    ''')
+
+    # Commit changes and close the connection
+    conn.commit()
+    conn.close()
+
+    print(f"Database '{DATABASE}' initialized successfully.")
+
+if not os.path.isfile(DATABASE):
+    create_database()
+
+####
+
+
+
 AIdevice = config["device"]
 verbose = config["verbose"]
 from flask import Flask, request, send_file, make_response, Response, jsonify, abort, session, redirect
-import sqlite3
 from sys import maxsize as inf
 import bcrypt
 import random
@@ -24,8 +105,6 @@ import threading
 from waitress import serve
 import datetime
 from gpt4all import GPT4All
-from . import init
-from . import compiled_settings
 from pathlib import Path
 environment = config["env"]
 
@@ -40,19 +119,12 @@ tts_namespace = uuid.UUID('b1d13232-8eca-11ef-b06f-325096b39f47')
 app.secret_key = bcrypt.gensalt()
 if not os.path.isdir("./metadata"):
     os.makedirs("./metadata")
-model = None
-if compiled_settings.include_ai_model:
-    with packaged.open("/packaged/metadata/Llama-3.2-1B-Instruct-Q4_0.gguf") as tmpfile_location:
-        if not os.path.isfile("./metadata/Llama-3.2-1B-Instruct-Q4_0.gguf"):
-            Path(tmpfile_location).rename("./metadata/Llama-3.2-1B-Instruct-Q4_0.gguf")
-        model = GPT4All("Llama-3.2-1B-Instruct-Q4_0.gguf",model_path="./metadata",device=AIdevice,n_ctx=int(1024*20))
-else:
-    model = GPT4All("Llama-3.2-1B-Instruct-Q4_0.gguf",model_path="./metadata",device=AIdevice,n_ctx=int(1024*20))
+model = GPT4All(config["model"],model_path="./metadata",device=AIdevice,n_ctx=int(1024*20))
 
 @app.route("/")
 def hello_world():
     # allow without auth validation OR main site won't work
-    with packaged.open("/packaged/root.html") as tmpfile_location:
+    with packaged["open"]("/packaged/root.html") as tmpfile_location:
         with open(tmpfile_location, "r", encoding="utf-8") as f:
             return f.read().replace("%s","Healthy")
 
@@ -63,7 +135,7 @@ def clientsender(path):
     if ".." in path:
         abort(400)  # Bad request
     # only a static file sender, so allow without auth validation OR main site won't work
-    with packaged.open("/packaged/client/" + path) as tmpfile_location:
+    with packaged["open"]("/packaged/client/" + path) as tmpfile_location:
         response = send_file(tmpfile_location, as_attachment=False)
         response.headers['X-Frame-Options'] = "SAMEORIGIN"
 

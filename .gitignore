@@ -1,3 +1,5 @@
 *.db
 packaged.py
 metadata/
+tempWorkData/
+__pycache__/

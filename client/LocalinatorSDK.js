@@ -1,4 +1,4 @@
-// RoominatorSDK.js
+// LocalinatorSDK.js
 
 // Default base URL (can be overridden later)
 let baseURL_ahgjfh = "http://localhost:8080/";

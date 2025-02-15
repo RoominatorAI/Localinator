@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="/client/RoominatorSDK.js"></script>
-<script src="https://api.roominator.xyz/static/js_shared.js"></script>
+<script src="/client/LocalinatorSDK.js"></script>
+<script src="https://api.Localinator.xyz/static/js_shared.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Character Creation GUI</title><style>        .auth-links a {
@@ -144,7 +144,7 @@ function sanitize(string) {
 
                 const charElement = document.createElement('div');
                 charElement.className = 'char';
-                charElement.innerHTML = `<a href="/client/latest-chat.html?c=${id}"><img alt="${sanitize(charName)}" src="https://api.roominator.xyz/static/bot-pfp-${id}.webp" style="height:100%;width:100%;"></a>`;
+                charElement.innerHTML = `<a href="/client/latest-chat.html?c=${id}"><img alt="${sanitize(charName)}" src="https://api.Localinator.xyz/static/bot-pfp-${id}.webp" style="height:100%;width:100%;"></a>`;
                 document.querySelector('.container-chars').appendChild(charElement);
             } catch (error) {
                 console.error('Error fetching character:', error);
@@ -191,7 +191,7 @@ function sanitize(string) {
         <a href="users/register.html">Register</a>
     </div>
     <div class="charManagement-links" id="charManagement-links" style="display:none;">
-        <a href="index.html">Roominator</a>
+        <a href="index.html">Localinator</a>
         <a href="create-gui.html">Create Character</a>
     </div>
     <div class="user-status">
@@ -279,7 +279,7 @@ function sanitize(string) {
                 modified: timestamp,
                 source: null,
                 tool: {
-                    name: "Roominator GUI",
+                    name: "Localinator GUI",
                     version: "0.2.0"
                 }
             }

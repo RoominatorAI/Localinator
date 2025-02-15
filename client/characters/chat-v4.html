@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="/client/RoominatorSDK.js"></script>
-<script src="https://api.roominator.xyz/static/js_shared.js"></script>
+<script src="/client/LocalinatorSDK.js"></script>
+<script src="https://api.Localinator.xyz/static/js_shared.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -167,7 +167,7 @@
             const data = await response.json();
             isPremium = data.hasPremium;
 console.log(data.hasPremium);
-if(data.hasPremium){AIModel = "Roominator+";}
+if(data.hasPremium){AIModel = "Localinator+";}
         } catch (error) {
             console.error('Error checking premium status:', error);
         }
@@ -180,7 +180,7 @@ if(data.hasPremium){AIModel = "Roominator+";}
         <a href="../users/register.html">Register</a>
     </div>
     <div class="charManagement-links" id="charManagement-links" style="display:none;">
-        <a href="../index.html">Roominator</a>
+        <a href="../index.html">Localinator</a>
         <a href="../create-gui.html">Create Character</a>
     </div>
     <div class="user-status">
@@ -238,7 +238,7 @@ var iframeElement = parentDocument.getElementById('frame');
 
     const censorDiag = `<div style="filter:${iframeElement.getAttribute('frame-reversalOfTheme')}"><p style="background-color:rgb(169,5,5);color:rgb(0,255,0)">Sometimes the AI generates a reply that doesn't meet your requirements.<br>Turn off censorship to bypass this message.</p></div>`;
     var chatSession = null;
-    var AIModel = "Roominator";
+    var AIModel = "Localinator";
     var chatId = null; // Track cv_Value (chat ID)
     var url_string = window.location.href;
     var url = new URL(url_string);
@@ -267,14 +267,14 @@ var iframeElement = parentDocument.getElementById('frame');
     AIModel = data;
     console.log("Using external LLM",AIModel);
     } else {
-    AIModel = "Roominator";
+    AIModel = "Localinator";
     }
     alert(`Using device setting: ${isUsingDevice ? 'Enabled' : 'Disabled'}`);
   })
   .catch(error => {
     // Handle any errors that occurred during the fetch
         console.error('There has been a problem with your fetch operation:', error);
-        alert("Roominator LLM Server hasn't responded! Make sure you have downloaded it and ran it.");
+        alert("Localinator LLM Server hasn't responded! Make sure you have downloaded it and ran it.");
         toggleUseDevice.checked = false;
   });
     });
@@ -400,7 +400,7 @@ const response = await fetch(endpoint, {
         chatId = url.searchParams.get("cv"); // Get cv_Value from the URL
         const chardef = await getChatDefinition(url.searchParams.get("c"));
 const ifram = document.createElement("iframe");
-ifram.src=`https://www.roominator.xyz/client/characters/chats.html?c=${url.searchParams.get("c")}`;
+ifram.src=`https://www.Localinator.xyz/client/characters/chats.html?c=${url.searchParams.get("c")}`;
 document.getElementById("settings-menu").appendChild(ifram);
         obj = JSON.parse(JSON.parse(chardef)["json_content"]);
         const isMultiChar = obj.hasOwnProperty("multichar") && obj["multichar"] === true;
@@ -421,7 +421,7 @@ document.getElementById("settings-menu").appendChild(ifram);
         } else {
             chatId = await createNewChatSession(); // Create a new chat session if cv_Value is not provided
             window.history.pushState(chatId,
-                "Roominator.AI", window.location.href.concat("&cv=",chatId.toString()));
+                "Localinator.AI", window.location.href.concat("&cv=",chatId.toString()));
             chatSession = [];
             const additionalMsg = isMultiChar
             ? 'This is a multicharacter setup! There are multiple characters in the Chardef. Each character should act independently.'
