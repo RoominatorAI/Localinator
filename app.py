@@ -18,14 +18,14 @@ if not os.path.exists("config.json"):
     print("No config.json found, wrote example one.")
 
 if not os.path.exists("packaged.py"):
-    print("No datablob found! Please download one from GitHub Actions and then put it as packaged.py next to Localinator.")
+    print("No datablob found! Please download one from Releases and then put it as packaged.py next to Localinator.")
     sys.exit(1)
 
 with open("packaged.py","r") as f:
     try:
         exec(f.read(),packaged)
     except Exception as e:
-        print("Datablob threw error! Please download a working one from GitHub Actions and then put it as packaged.py next to Localinator. Error:",repr(e))
+        print("Datablob threw error! Please download a working one from Releases and then put it as packaged.py next to Localinator. Error:",repr(e))
         sys.exit(1)
 print(f"Finished in {time.time() - startTime}s.")
 import subprocess
@@ -707,5 +707,6 @@ def before_request():
         session["id"] = 0
 if __name__ == "__main__":
     print("Serving.")
+    print("URL: http://localhost:8080")
     serve(app, host='0.0.0.0', port=8080)
     close_connection()
