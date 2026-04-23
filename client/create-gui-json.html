@@ -6,7 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload JSON</title>
-<style>        .auth-links a {
+<style>
+        .auth-links a {
             margin-right: 15px; /* Add spacing between links */
             text-decoration: none; /* Remove underline from links */
             color: #3498db; /* Link color */
@@ -18,7 +19,25 @@
         }
         .user-status {
             margin-left: 15px; /* Optional spacing */
-        }</style>
+        }
+        /* Top bar styling – same as other pages */
+        .sidebar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+            height: 2vh;
+        }
+        .auth-links a, .charManagement-links a {
+            margin-right: 15px;
+            text-decoration: none;
+            color: #3498db;
+        }
+        .user-status {
+            margin-left: 15px;
+        }
+        </style>
     <script>
         let currentOffset = 0; // Offset for loading more characters
         let myUsername = "Guest";

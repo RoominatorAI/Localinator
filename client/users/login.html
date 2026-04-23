@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <script src="/client/LocalinatorSDK.js"></script>
-<script src="https://api.Localinator.xyz/static/js_shared.js"></script>
+    <script src="https://api.Localinator.xyz/static/js_shared.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Form</title>
@@ -16,22 +17,27 @@
             height: 100vh;
             margin: 0;
         }
+
         .login-container {
             background: white;
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
+
         h2 {
             margin-bottom: 20px;
         }
-        input[type="text"], input[type="password"] {
+
+        input[type="text"],
+        input[type="password"] {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 3px;
         }
+
         input[type="submit"] {
             background-color: #4CAF50;
             color: white;
@@ -40,44 +46,61 @@
             border-radius: 3px;
             cursor: pointer;
         }
+
         input[type="submit"]:hover {
             background-color: #45a049;
         }
     </style>
 </head>
+
 <body>
-<script>        const urlParams = new URLSearchParams(window.location.search);
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
 
         // Check if the 'error' parameter exists
         if (urlParams.has('error')) {
-            alert(urlParams.get('error'));
-            // You can perform further actions here
+            form.style.display = 'none';
+            const message = document.createElement('p');
+            message.textContent = urlParams.get('error');
+            document.querySelector('.login-container').appendChild(message);
         } else {
             console.log('Error parameter does not exist');
         }</script>
-            <script>
-
+    <script>
         // Wait until the DOM is fully loaded before manipulating the form
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
+                                    (async () => {
+                // Check if registration is open
+                const response = await fetch(buildAPIURL('isRegOpen'));
+                const data = await response.json();
+                if (!data.open) {
+                    // If registration is not open, hide the form and show a message
+                    const message = document.createElement('p');
+                    message.textContent = 'Registration is currently closed.';
+                    document.querySelector('.login-container').appendChild(message);
+                }
+            })();
             // Find the form element
             const form = document.getElementById('formeth');
-            
+
             // Set the action dynamically using the buildAPIURL function
             form.action = buildAPIURL('login');
+
         });
     </script>
-<div class="login-container">
-    <h2>Login</h2>
-    <form id="formeth" method="POST">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="formeth" method="POST">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
 
-        <input type="submit" value="Login">
-    </form>
-</div>
+            <input type="submit" value="Login">
+        </form>
+    </div>
 
 </body>
+
 </html>

@@ -1,7 +1,0 @@
-{
-  "verbose": true,
-  "env": "production",
-  "ignorelogin": false,
-  "device": "gpu",
-  "model": "Llama-3.2-1B-Instruct-Q4_0.gguf"
-}

@@ -1,39 +1,103 @@
 import json
 import os
 import time
+import re
 import sys
+__VERSION__ = "1.1.0"
+
+# Helper to parse version strings into comparable tuples of integers
+def _parse_version(v: str):
+    """Convert a version string like '1.2.3' into a tuple of ints (1, 2, 3).
+    Missing components are treated as zeros, e.g., '1.2' -> (1, 2, 0).
+    """
+    parts = v.split('.')
+    # Ensure at least three components for consistent comparison
+    while len(parts) < 3:
+        parts.append('0')
+    return tuple(int(p) for p in parts)
 print("Loading packaged content...")
 startTime = time.time()
 packaged = {}
-if not os.path.exists("config.json"):
-    with open("config.json","w") as f:
+has_embedded_client = False
+try:
+    if embedded == embedded: # type: ignore
+        has_embedded_client = True
+        # Embedded client datablob is available as a variable named 'embedded' in the global scope, so we can just use it directly without needing to read packaged.py at all!
+        # Useful for incase the datablob fails to run.
+except NameError:
+    pass
+if not os.path.exists("config.jsonc") and not os.path.exists("config.json"):
+    with open("config.jsonc","w") as f:
         f.write("""{
-  "verbose": true,
-  "env": "production",
-  "ignorelogin": false,
-  "device": "gpu",
-  "model": "Llama-3.2-1B-Instruct-Q4_0.gguf"
+  "verbose": true, // Log more?
+  "env": "production", // "production" or "development", mostly useless, switches database.
+  "ignorelogin": false, // If true, enable single user mode.
+  "device": "gpu", // Where to run the model on.
+  "disable_registration": false, // Set to true to disable user registration, allowing only existing users to log in.
+  "model": "Llama-3.2-1B-Instruct-Q4_0.gguf" // The model file to use, located in the "models" directory. Must be a .gguf file, we use gpt4all.
 }
 """)
     print("No config.json found, wrote example one.")
 
-if not os.path.exists("packaged.py"):
+if not os.path.exists("packaged.py") and not has_embedded_client:
     print("No datablob found! Please download one from Releases and then put it as packaged.py next to Localinator.")
     sys.exit(1)
 
-with open("packaged.py","r") as f:
-    try:
-        exec(f.read(),packaged)
-    except Exception as e:
-        print("Datablob threw error! Please download a working one from Releases and then put it as packaged.py next to Localinator. Error:",repr(e))
-        sys.exit(1)
+if  os.path.exists("packaged.py"):
+    with open("packaged.py","r") as f:
+        try:
+            exec(f.read(),packaged)
+        except Exception as e:
+            print("Warning: Datablob threw error, but embedded client is available so continuing anyway. Error was:",repr(e))
+            packaged = embedded # type: ignore
+elif has_embedded_client:
+    print("No datablob found, but embedded client is available so continuing anyway.")
+    packaged = embedded # type: ignore
+
+# Read the minimal version requirement for the client from the datablob constraints, and check if it's compatible with this server version.
+if "constraints" in packaged and "REQUIRES_SERVER" in packaged["constraints"]:
+    for part in packaged["constraints"]["REQUIRES_SERVER"].split(","):
+        part = part.strip()
+        if part.startswith(">="):
+            required_version = part[2:].strip()
+            if _parse_version(__VERSION__) < _parse_version(required_version):
+                print(f"Warning: This client requires server version {required_version} or higher. This server is version {__VERSION__}. The client may not work properly.")
+        elif part.startswith(">"):
+            required_version = part[1:].strip()
+            if _parse_version(__VERSION__) <= _parse_version(required_version):
+                print(f"Warning: This client requires server version {required_version} higher (exclusive). This server is version {__VERSION__}. The client may not work properly.")
+        elif part.startswith("=="):
+            required_version = part[2:].strip()
+            if _parse_version(__VERSION__) != _parse_version(required_version):
+                print(f"Warning: This client requires server version {required_version}. This server is version {__VERSION__}. The client may not work properly.")
+        elif part.startswith("<="):
+            required_version = part[2:].strip()
+            if _parse_version(__VERSION__) > _parse_version(required_version):
+                print(f"Warning: This client requires server version {required_version} or lower (inclusive). This server is version {__VERSION__}. The client may not work properly.")
+        elif part.startswith("<"):
+            required_version = part[1:].strip()
+            if _parse_version(__VERSION__) >= _parse_version(required_version):
+                print(f"Warning: This client requires server version {required_version} or lower (exclusive). This server is version {__VERSION__}. The client may not work properly.")
 print(f"Finished in {time.time() - startTime}s.")
-import subprocess
 #import pyttsx3
 #from openai import OpenAI
+string_re = r'"(?:\\.|[^"\\])*"'
+comment_re = r'//.*?$|/\*.*?\*/'
 
-with open("config.json","r") as f:
-    config = json.load(f)
+def strip_comments(text):
+    def replacer(match):
+        if match.group(0).startswith('"'):
+            return match.group(0)  # keep strings
+        return ''
+
+    pattern = re.compile(f'{string_re}|{comment_re}', re.S | re.M)
+    return re.sub(pattern, replacer, text)
+config_path = "config.json"
+if os.path.exists("config.jsonc"):
+    config_path = "config.jsonc"
+with open(config_path,"r") as f:
+    config = json.loads(strip_comments(f.read()))
+
 
 
 ## INIT.PY
@@ -135,11 +199,14 @@ def clientsender(path):
     if ".." in path:
         abort(400)  # Bad request
     # only a static file sender, so allow without auth validation OR main site won't work
-    with packaged["open"]("/packaged/client/" + path) as tmpfile_location:
-        response = send_file(tmpfile_location, as_attachment=False)
-        response.headers['X-Frame-Options'] = "SAMEORIGIN"
+    try:
+        with packaged["open"]("/packaged/client/" + path) as tmpfile_location:
+                response = send_file(tmpfile_location, as_attachment=False)
+                response.headers['X-Frame-Options'] = "SAMEORIGIN"
 
-        return response
+                return response
+    except FileNotFoundError:
+        abort(404)  # Not found
 
 @app.route("/generateCensor", methods=['POST'])
 def fgkljc():
@@ -181,7 +248,7 @@ def fgklj():
 @app.route('/isalive', methods=['GET'])
 def is_alive():
     return Response('Yes, I am alive.',
-                    mimetype='text/plain')  # Sure i can let this route be used without the frigging auth validation, its minimal cpu usage anyways
+                    mimetype='text/plain')
 
 
 @app.route("/getFandomPage", methods=['GET'])
@@ -354,7 +421,7 @@ def login():
         except Exception as e:
             return redirect("/client/index.html?error=Server failure. Please try again later.")
         if user is None:
-            return redirect("/client/login.html?error=Username or password is incorrect.")
+            return redirect("/client/users/login.html?error=Username or password is incorrect.")
         stored_hash = user["passhash"]
         if bcrypt.hashpw(password.encode('utf-8'), stored_hash) == stored_hash:
             session['authkey'] = bcrypt.gensalt()  # We use random salts for authkey, code smell i know
@@ -364,13 +431,15 @@ def login():
             session.permanent = False
             return redirect("/client/index.html")
         else:
-            return redirect("/client/login.html?error=Username or password is incorrect.")
+            return redirect("/client/users/login.html?error=Username or password is incorrect.")
 
 
 @app.route('/register', methods=['POST'])
 def register():
     if config["ignorelogin"]:
-        return redirect("/client/index.html?error=Account management is not allowed in Single User Mode")
+        return redirect("/client/users/register.html?error=Account management is not allowed in Single User Mode")
+    if config.get("disable_registration", False):
+        return redirect("/client/users/register.html?error=Registration is currently disabled.")
     with dblock:
         username = request.form.get('username')
         password = request.form.get('password')
@@ -398,7 +467,13 @@ def register():
         except sqlite3.Error as e:
             return f"An error occurred while registering: {e}", 500
 
-        return redirect("/client/login.html")
+        return redirect("/client/users/login.html")
+
+@app.route("/isRegOpen")
+def is_reg_open():
+    if config["ignorelogin"]:
+        return jsonify({"open": False})
+    return jsonify({"open": not config.get("disable_registration", False)})
 
 
 @app.route('/whoami', methods=['get'])

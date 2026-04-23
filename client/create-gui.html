@@ -21,10 +21,8 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-            justify-content: center;
             margin: 0;
+            background-color: #f4f4f4;
             overflow: hidden;
         }
         input, textarea {
@@ -45,6 +43,23 @@
         button:hover {
             background-color: #218838;
         }
+        /* Top bar styling – same as index page */
+        .sidebar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+            height: 2vh;
+        }
+        .auth-links a, .charManagement-links a {
+            margin-right: 15px;
+            text-decoration: none;
+            color: #3498db;
+        }
+        .user-status {
+            margin-left: 15px;
+        }
         /* Style the button that is used to open and close the collapsible content */
         .collapsible {
             background-color: #eee;
@@ -57,29 +72,16 @@
             outline: none;
             font-size: 15px;
         }
-
-        /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
         .active, .collapsible:hover {
             background-color: #ccc;
         }
-
-        /* Style the collapsible content. Note: hidden by default */
         .content {
             padding: 0 18px;
             display: none;
             overflow: scroll;
             background-color: #f1f1f1;
             height: 50vh;
-            width:98vw;
-            transition: max-height 0.2s ease-out;
-        }
-        .content {
-            padding: 0 18px;
-            display: none;
-            overflow: scroll;
-            background-color: #f1f1f1;
-            height: 50vh;
-            width:98vw;
+            width: 98vw;
             transition: max-height 0.2s ease-out;
         }
     </style>
@@ -134,7 +136,8 @@ function sanitize(string) {
 
         async function fetchCharacter(id) {
             try {
-                const response = await fetch(buildAPIURL(`getchardef/${id}`=,  {credentials: 'include'});
+                // Fixed syntax error: removed stray '=' after template literal
+                const response = await fetch(buildAPIURL(`getchardef/${id}`), {credentials: 'include'});
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
@@ -232,6 +235,10 @@ function sanitize(string) {
     <label for="pgn">Page Name:</label>
     <input type="text" id="pgn" required><br>
     <button id="createCharBtn">Create Character</button>
+</div>
+<!-- Link to JSON upload helper page -->
+<div style="margin-top: 15px; text-align: center;">
+    <a href="create-gui-json.html" style="color: #3498db; text-decoration: underline;">Or upload a character JSON file</a>
 </div>
 
 <script>

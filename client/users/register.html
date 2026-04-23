@@ -47,9 +47,30 @@
 </head>
 <body>
     <script>
+        const urlParams = new URLSearchParams(window.location.search);
 
+        // Check if the 'error' parameter exists
+        if (urlParams.has('error')) {
+            const message = document.createElement('p');
+            message.textContent = urlParams.get('error');
+            document.querySelector('.login-container').appendChild(message);
+        } else {
+            console.log('Error parameter does not exist');
+        }
         // Wait until the DOM is fully loaded before manipulating the form
         document.addEventListener('DOMContentLoaded', function() {
+                                    (async () => {
+                // Check if registration is open
+                const response = await fetch(buildAPIURL('isRegOpen'));
+                const data = await response.json();
+                if (!data.open) {
+                    // If registration is not open, hide the form and show a message
+                    form.style.display = 'none';
+                    const message = document.createElement('p');
+                    message.textContent = 'Registration is currently closed.';
+                    document.querySelector('.login-container').appendChild(message);
+                }
+            })();
             // Find the form element
             const form = document.getElementById('formeth');
             

@@ -1,0 +1,8 @@
+{
+  "verbose": true, // Log more?
+  "env": "production", // "production" or "development", mostly useless, switches database.
+  "ignorelogin": false, // If true, enable single user mode.
+  "device": "gpu", // Where to run the model on.
+  "disable_registration": false, // Set to true to disable user registration, allowing only existing users to log in.
+  "model": "Llama-3.2-1B-Instruct-Q4_0.gguf" // The model file to use, located in the "models" directory. Must be a .gguf file, we use gpt4all.
+}

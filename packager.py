@@ -80,7 +80,8 @@ output_lines.append("        try:")
 output_lines.append("            os.unlink(tmp.name)")
 output_lines.append("        except Exception:")
 output_lines.append("            pass")
-output_lines.append("")
+output_lines.append("constraints = {}")
+output_lines.append("constraints['REQUIRES_SERVER'] = '>=1.1.0' # The minimum version of the server required to run this client, used for compatibility checks.")
 
 # Write the output to packaged.py.
 with open("packaged.py", "w", encoding="utf-8") as out_file:
