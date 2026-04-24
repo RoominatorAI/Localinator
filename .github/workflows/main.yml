@@ -35,6 +35,7 @@ jobs:
 
       - name: Create Executable
         run: |
+          python packager.py # build the datablob for embedded ui
           python build.py
           pyinstaller --onefile --name "Localinator" --additional-hooks-dir=./hooks app-comp.py
 
